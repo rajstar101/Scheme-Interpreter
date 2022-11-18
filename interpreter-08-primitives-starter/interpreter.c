@@ -10,20 +10,32 @@ void evaulationError(){
     texit(0);
 }
 
-Value *sumDoub(Value *tree, double currIntSum){
-    
-    ;//this for doub
-}
-
-Value *sumInt(Value *tree){
+Value *primSum(Value *tree, Frame *frame){
     float currSum = 0;
     while(!isNull(tree)){
-        //add error checkers
-        //needs to make a return statement here for doub
-        currSum = currSum + tree->i;
-        tree = cdr(tree); //I'm defrefrencing aint I
+        Value *tree_holder = eval(tree, frame);
+        if(tree_holder->type == INT_TYPE){
+            currSum = currSum + tree->i;
+        } else if(tree_holder->type == DOUBLE_TYPE){
+            currSum = currSum + tree->d;
+        } else {
+            evaluationError();
+            Value *useless;
+            return useless;
+        }
+        tree = cdr(tree);
     }
-    return currSum;
+    Value *primSum_node = talloc(sizeof(Value));
+    primSum_node->type = DOUBLE_TYPE;
+    primSum_node->d = currSum;
+    return primSum_node;
+}
+
+Value *primNull(Value *tree, Frame *frame){
+    Value *tree_holder = eval(tree, frame);
+    if(isNull(tree_holder)){
+        ;
+    };
 }
 
 Frame *newFrame(Value *bindings, Frame *parent){
@@ -157,11 +169,6 @@ Value *eval(Value *tree, Frame *frame) {
                 lambNode->cl.functionCode = car(cdr(args));
                 lambNode->cl.paramNames = car(args);
                 return lambNode;
-            }
-            else if(!strcmp(first->s, "+")){
-                Value *lambNode = talloc(sizeof(Value));
-                lambNode->type = PRIMITIVE_TYPE;
-                lambNode->pf = %;
             }
             else {
                 //check if its a lambda
