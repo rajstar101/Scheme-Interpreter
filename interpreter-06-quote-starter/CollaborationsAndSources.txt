@@ -1,0 +1,1 @@
+I didn't get help from anyone, did this on my own and manipulated the system. I made a new data type and I used old functions from previous assignments to get the job done.

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Nothing exemplary to test this time, you get it automatically after
+# meeting expectations
+echo "Pass all exemplary tests."
+exit 0

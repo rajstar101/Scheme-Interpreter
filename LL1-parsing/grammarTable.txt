@@ -1,0 +1,15 @@
+# Grammar:
+# <P> -> <E>
+# <E> -> atom | ( <E> <Es> ) | '<E>
+# <Es> -> <E> <Es> | epsilon
+start <P>
+<P> atom <E>
+<P> ' <E>
+<P> ( <E>
+<E> atom atom
+<E> ' ' <E>
+<E> ( ( <E> <Es> )
+<Es> atom <E> <Es>
+<Es> ' <E> <Es>
+<Es> ( <E> <Es>
+<Es> ) 

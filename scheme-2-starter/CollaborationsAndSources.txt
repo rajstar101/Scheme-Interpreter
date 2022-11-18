@@ -1,0 +1,9 @@
+I did not collaborate outside of this assignment with any students. I also didn't use outside resources other than https://www.scheme.com/tspl4/control.html#./control:s11.
+What realy helped me with this assignment was the lesson on 9/16 and using helper functions.
+I did struggle making the keep-first-n function alot. I wasn't appending the list immediatly
+I was trying to find a way around it and it was terrible. It wasn't until the class today that I knew that we could do that.
+It helped alot out with the coding process. The second problem I encountered was when I was testing to see if the length of n was 
+greater than the length of the list. Initially I would just return the list back if that was the case. However after doing the test
+I rememberd you just needed to return a blank list if that was the case and that is when I really struggled. I kept on struggling until
+I decided to use a "helper function." That made life so much easier. It was as if I flipped a switch and the assignment was over.
+Testing was definitley the longest part of the assignment and I definitleystruggled with the second part of the assignment way more. 

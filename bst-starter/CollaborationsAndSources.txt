@@ -1,0 +1,5 @@
+I used two lab assistants as resources during my time working on this assignment: one person was named Anders and the other person
+was a student in our class. They are the only ones who helped me. The documentaiton was also a massive resources. The thing that 
+helped me most during this was the helper class (is bst because it made (make bst a lot cleaner and easier to use. For sure the
+hardest function to make was the last one (insert but other than that everything was fun. I used the page of the documentaiton 
+and lab assistants, thats all.

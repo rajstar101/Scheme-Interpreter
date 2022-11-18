@@ -1,0 +1,63 @@
+#!/usr/bin/python3
+
+import subprocess
+import sys
+import unittest
+
+def runcmd(cmd, input_text=None):
+  splitcmd=cmd.split()
+  return subprocess.run(splitcmd, stdout=subprocess.PIPE, input=input_text,
+                        check=True, universal_newlines=True)
+
+class Tests(unittest.TestCase):
+  def testGuess(self):
+    runcmd('clang -o guess guess.c')
+    test_input = \
+      '''
+      225577
+      50
+      75
+      83
+      89
+      95
+      92
+      94
+      '''
+
+    output = runcmd('./guess', input_text=test_input).stdout
+
+    # See if output contains correct output somewhere
+    self.assertNotEqual(-1, output.find("Too low!"))
+    self.assertNotEqual(-1, output.find("Too high!"))
+    self.assertNotEqual(-1, output.find("Total guesses = 7"))
+
+  def testSums(self):
+    runcmd('clang -o sums sums.c')
+    test_input = \
+      '''
+      5
+      10
+      '''
+
+    output = runcmd('./sums', input_text=test_input).stdout
+    self.assertNotEqual(-1, output.find("24"))
+
+
+  def testComplex(self):
+    runcmd('clang -o complex complex.c')
+    test_input = \
+      '''
+      2
+      5
+      3
+      4
+      '''
+
+    output = runcmd('./complex', input_text=test_input).stdout
+    outputNoWhiteSpace = "".join(output.split())
+    correctResult = "Before multiplication:\nc1:       2.00 +       5.00 i\nc2:       3.00 +       4.00 i\nAfter multiplication:\nc1:     -14.00 +      23.00 i\nc2:     -14.00 +      23.00 i"
+    correctResultNoWhiteSpace = "".join(correctResult.split())
+    # See if output contains correct output somewhere
+    self.assertNotEqual(-1, outputNoWhiteSpace.find(correctResultNoWhiteSpace))
+
+unittest.main()

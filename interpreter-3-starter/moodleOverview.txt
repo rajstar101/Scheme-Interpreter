@@ -1,0 +1,128 @@
+2 Assignment details
+You should create tokenizer.c to implement the functions specified in tokenizer.h. More generally, your tokenizer should read Scheme code from a file and return a linked list of tokens accompanied by the type of each token. You must include the following token types:
+
+XbooleanX, Xinteger, Xdouble, XstringX, symbol, XopenX, XcloseX
+(the last two are for ( and )). The output format is, per line, token:type.
+
+On comments: You should strip out comments as you tokenize, so that anything after a ; on a line is ignored.
+
+(In detecting if you've found the end of a line, make sure to be super careful if you have created your test file with an editor on Microsoft Windows. Linux and Mac use an ascii \n at the end of a line, but Windows uses a \r\n at the end of a line. All of our tests run on on Linux so you don't need to worry about this unless you are creating your own test files with Windows. If you are, you need to either just create your test files on Mac/Linux (i.e., on the lab computers), or make sure that your tokenizer code can also handle \r\n at the ends of a line.
+
+For example, here's the input file t04.scm that I supplied in the exemplary tests:
+
+(+ x2 ( + ( quote x ) "foo;; still a string" 323) ;; now it's a comment!
+On the above, your program should output:
+
+(:open
++:symbol
+x2:symbol
+(:open
++:symbol
+(:open
+quote:symbol
+x:symbol
+):close
+"foo;; still a string":string
+323:integer
+):close
+
+Your tokenizer should handle bad input gracefully; your program should never crash with a segfault, bus error, or the like. If the input code is untokenizable, print an error message. You may print something generic such as "Syntax error: untokenizeable", or you can provide more detailed information in the error message depending on what the problem is. Whatever you print, it should start with the string text "Syntax error" so that it will pass the automated tests. (Upper or lower case doesn't matter.) After encountering an error, your program should exit after printing the error - don't read any more input. This is why we wrote the function texit. Also feel free to follow your error message by printing Scheme code around the error to be helpful if you can, though this optional.
+
+3 Syntax details
+Scheme is a complex language. In the interest of making things more tractable, here is a simplified syntax for numbers that I expect your tokenizer to handle (adapted from Dybvig's book):
+
+<number>   ->  <sign> <ureal> | <ureal>
+<sign>     ->  + | -
+<ureal>    ->  <uinteger> | <udecimal>
+<uinteger> ->  <digit>+
+<udecimal> ->  . <digit>+ | <digit>+ . <digit>*
+<digit>    ->  0 | 1 | ... | 9
+Note that * is shorthand for zero or more repetitions of the symbol, and + is shorthand for one or more repetitions of the symbol. Tip: if you want to convert strings to numbers, you can use the functions strtol and strtod in the standard library.
+
+Similarly, you should recognize symbols (identifiers) with the following syntax (again adapted from Dybvig's book):
+
+<identifier> ->  <initial> <subsequent>* | + | -
+<initial>    ->  <letter> | ! | $ | % | & | * | / | : | < | = | > | ? | ~ | _ | ^
+<subsequent> ->  <initial> | <digit> | . | + | -
+<letter>     ->  a | b | ... | z | A | B | ... | Z
+<digit>      ->  0 | 1 | ... | 9
+This is a little inconsistent with the actual behavior of Scheme, but it simplifies things up a bit (at the cost of some minor incompatibilities).
+
+Symbols are case-sensitive.
+
+You may also find the syntax section of Dybvig's book to be helpful. The dialect described may not be completely consistent with the above, but it's readable in English. The BNF that I have provided above is considered to be the correct specification for this assignment. It deviates slightly from what Guile allows, but in ways that I think end up making some things, like differentiating numbers and symbols, easier.
+
+Scheme provides many different ways of enclosing lists (parentheses, square brackets, etc.) We will only write code that uses parentheses. None of our test code will use square brackets. You can write your tokenizer and later parts of the project to only work on parentheses. That said, if you wish your project to also work on square brackets, it could be a fun extension! If you think you want to go that way, you'll need to make sure that you tokenize parentheses and brackets differently.
+
+4 Some additional hints
+I suppose it is theoretically possible to code this assignment up so that it produces precisely the right output, but without actually storing the data in a list. Don't do that; perhaps that might be easier to get results on this portion of the project (although I'm not convinced), but it will leave you in a useless position to continue for the next portion.
+
+There are many different ways of reading input files. I found it most useful to use the functions fgetc and occasionally ungetc. You can look those up; documentation is also available here.
+
+The heart of your code will be your tokenize function, which reads the file and returns a list of Values. Here's a rough sketch of what that function might look like:
+
+Value *tokenize() {
+    char charRead;
+    Value *list = makeNull();
+    charRead = (char)fgetc(stdin);
+
+    while (charRead != EOF) {
+
+        if (charRead == .....) {
+            ...
+        } else if (charRead == ......) {
+            ...
+        } else {
+            ...
+        }
+        charRead = (char)fgetc(stdin);
+    }
+
+
+    Value *revList = reverse(list);
+    return revList;
+}
+We will guarantee that no token will be longer than 300 characters long. That includes strings. Your code doesn't need to handle arbitrarily long tokens.
+
+We will guarantee that no line will be longer than 300 characters long. Your code doesn't need to handle arbitrarily long lines.
+
+FAQ: Should your tokenizer catch errors with mismatched parentheses, i.e. )(a b ))? No. That's the parser's job.
+
+5 The files you start with
+After you download the starter code, you should be able to see that you get the following starting files:
+
+value.h: essentially the same header we have been using for a Value, but some new types are added in
+linkedlist.h: the same header file, more or less, from the last assignment
+talloc.h: the same header file, more or less, from the last assignment
+tokenizer.h: the header file for the functions you'll need to write for this assignment. You'll also create a number of helper functions for that, but those don't need to appear in the header since they will be "private".
+main.c: Short main function that drives the whole program.
+Makefile: contains instructions for the command make, which will compile and test your code
+test-files-m/ and test-files-e/: a directory of Scheme programs as test inputs, and expected outputs
+test-m and test-e: the usual testing scripts that you run
+tester.py: a helper script to handle automated testing.
+lib: a subdirectory of binaries, see below
+At this point, you have a choice regarding how to proceed for linkedlist.c and talloc.c. If you want to continue to build your own interpreter that is truly yours, you can copy in these files from the last project, and move forward. Alternatively, if you would prefer to use my versions instead, you can do so. In the lib directory you'll see linkedlist.o and talloc.o files, as well as .h files to go with them. These .o files are compiled binary versions of my linkedlist.c and talloc.c. If you would prefer to use one or both of these in your project instead of your own, you can replace them in the Makefile. Specifically, in the Makefile, change the first line as indicated. I provide these binaries so that people who have trouble with earlier parts of the project don't get slowed down, but I heavily encourage you to use your own code if it works for two reasons:
+
+You'll feel a much stronger sense of ownership for the project if you do.
+You won't be able to trace bugs back to the linked list / talloc source code if you need to. You'll sometimes have to make do with cryptic errors from my code that say "linked list insertion error" or something like that. My code works as specified, but it will produce bad and sometimes difficult-to-understand output if it gets bad input.
+Note that compiled binaries are operating system specific (sometimes version specific). These .o files were compiled to work on (some versions of) Linux. They work on the department server. They definitely won't work on Macs. They might work under WSL in Windows. I'm not sure.
+
+To compile your code, issue the command "make" at the command prompt. (This will give an error if you haven't yet created the .c files you need, or if you haven't changed the Makefile to refer to the binaries if you need them.)
+
+To run your code, first create a file with some of your own Scheme code in it, and give it a filename (e.g., myprog.scm). Then issue this command at a prompt:
+
+./interpreter < myprog.scm
+Your tokenizer code should read data from "stdin." In that case, the above command will redirect the text from the myprog.scm file into your program.
+
+To run your code through valgrind, you can similarly type
+
+valgrind ./interpreter < myprog.scm
+One challenge you may find is that when your output gets long, it gets hard to read before it scrolls all the way off the top of your terminal window. Piping your output through the UNIX less program helps. It will pause the output at the bottom of the screen, waiting for you press the space bar to continue, or q if you want to quit. You can do this with or without valgrind:
+
+./interpreter < myprog.scm | less
+valgrind ./interpreter < myprog.scm | less
+Piping the results through less as shown above works, but there's an additional problem to solve. The output from your program, as well as from valgrind, comes from two different streams: one is known as "standard out," and the other is known as "standard error." By default, when you use the vertical bar (which means "pipe"), only standard out is piped into less. This means that if you have a lot of error messages from your program, or info from valgrind (which tends to go through standard error), it will still scroll off the screen. To fix this, you want to first redirect the standard error stream to the standard out stream; then you want to pipe all of that output to less. To do so, with and without valgrind, you use the following arcane syntax:
+
+./interpreter < myprog.scm 2>&1 | less
+valgrind ./interpreter < myprog.scm 2>&1 | less
+The shell program that we are using (known as bash) refers to standard error as stream number 2, and standard out as stream number 1. The above syntax says to redirect stream 2 into stream 1. If you'd like to learn more about all of this, I'd encourage you to look at the documentation for bash; type man bash at a command prompt.
