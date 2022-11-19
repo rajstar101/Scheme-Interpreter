@@ -6,38 +6,9 @@
 #include <string.h>
 
 void evaulationError(){
-    printf("Evaluation error\n");
+    printf("Evaulation error\n");
     texit(0);
 }
-
-Value *primSum(Value *tree, Frame *frame){
-    float currSum = 0;
-    while(!isNull(tree)){
-        Value *tree_holder = eval(tree, frame);
-        if(tree_holder->type == INT_TYPE){
-            currSum = currSum + tree->i;
-        } else if(tree_holder->type == DOUBLE_TYPE){
-            currSum = currSum + tree->d;
-        } else {
-            evaluationError();
-            Value *useless;
-            return useless;
-        }
-        tree = cdr(tree);
-    }
-    Value *primSum_node = talloc(sizeof(Value));
-    primSum_node->type = DOUBLE_TYPE;
-    primSum_node->d = currSum;
-    return primSum_node;
-}
-
-Value *primNull(Value *tree, Frame *frame){
-    Value *tree_holder = eval(tree, frame);
-    if(isNull(tree_holder)){
-        ;
-    };
-}
-
 Frame *newFrame(Value *bindings, Frame *parent){
     Frame *newFrame = talloc(sizeof(Frame));
     newFrame->parent = parent;
@@ -55,12 +26,13 @@ Value *lookUpSymbol(Value *tree, Frame *frame){ //find bindings
             if(strcmp(currSymbo, car(car(currBindings))->s)==0){
                 return car(cdr(car(currBindings)));
             }
-            currBindings = cdr(currBindings); //am I checking through bindings right?
+            currBindings = cdr(currBindings);
         }
         currFrame = currFrame->parent;
     }
+    printf("line 33: ");
     evaulationError();
-    return tree; //what else do we return
+    return tree;
 }
 
 Value *eval(Value *tree, Frame *frame) {
@@ -102,12 +74,15 @@ Value *eval(Value *tree, Frame *frame) {
                         if(!isNull(cdr(cdr(args)))){
                             ;
                         } else {
+                            printf("LINE 77: ");
                             evaulationError();
                         }
                     } else {
+                        printf("LINE 81: ");
                         evaulationError();
                     }
                 } else {
+                    printf("LINE 85: ");
                     evaulationError();
                 }
                 Value *tUf = eval(car(args), frame);
@@ -129,6 +104,7 @@ Value *eval(Value *tree, Frame *frame) {
                     newBindings = makeNull();
                 } else {
                     if(isNull(car(car(oldBindings)))){
+                        printf("LINE 105: ");
                         evaulationError();
                     }
                     while(!isNull(oldBindings)){//car(args) is the new bindings
@@ -142,6 +118,7 @@ Value *eval(Value *tree, Frame *frame) {
                 }
                 newBindings = reverse(newBindings);
                 if(isNull(cdr(args))){
+                    printf("LINE 117: ");
                     evaulationError();
                 }
                 Frame *letFrame = newFrame(newBindings, frame);
@@ -171,38 +148,55 @@ Value *eval(Value *tree, Frame *frame) {
                 return lambNode;
             }
             else {
-                //check if its a lambda
-                Value *lambNode = eval(first, frame);
-                int argLength = length(args);
-                int paramLength = length(lambNode->cl.paramNames);
-                if(isNull(car(lambNode->cl.paramNames))){
-                    paramLength = 0;
-                }
-                if(paramLength != argLength){
-                    evaulationError();
-                    return makeNull();
-                }else{
-                    Value *params = lambNode->cl.paramNames;
-                    Value *values = args;
-                    Value *newBindings = makeNull();
-                    int x = length(args);
-                    while(x>0){
-                        Value *newVariables = makeNull();
-                        newVariables = cons(eval(car(values), frame), newVariables);
-                        newVariables = cons(car(params), newVariables);
-                        newBindings = cons(newVariables, newBindings);
-                        params = cdr(params);
-                        values = cdr(values);
-                        x = x - 1;
+                Value *elseNode = eval(first, frame);
+                if(elseNode->type == CLOSURE_TYPE){
+                    int argLength = length(args);
+                    int paramLength = length(elseNode->cl.paramNames);
+                    if(isNull(car(elseNode->cl.paramNames))){
+                        paramLength = 0;
                     }
-                    Frame *lambFrame = newFrame(newBindings, lambNode->cl.frame);
-                    Value *lambResult = eval(lambNode->cl.functionCode, lambFrame);
-                    return lambResult;
+                    if(paramLength != argLength){
+                        printf("line 155: ");
+                        evaulationError();
+                        return makeNull();
+                    }else{
+                        Value *params = elseNode->cl.paramNames;
+                        Value *values = args;
+                        Value *newBindings = makeNull();
+                        int x = length(args);
+                        while(x>0){
+                            Value *newVariables = makeNull();
+                            newVariables = cons(eval(car(values), frame), newVariables);
+                            newVariables = cons(car(params), newVariables);
+                            newBindings = cons(newVariables, newBindings);
+                            params = cdr(params);
+                            values = cdr(values);
+                            x = x - 1;
+                        }
+                        Frame *lambFrame = newFrame(newBindings, elseNode->cl.frame);
+                        Value *lambResult = eval(elseNode->cl.functionCode, lambFrame);
+                        return lambResult;
+                    }
+                }
+                if(elseNode->type == PRIMITIVE_TYPE){
+                    Value *eval_tree = makeNull();
+                    Value *prime_args = args;
+                    int i = 0;
+                    while(!isNull(prime_args)){
+                        printf("%i\n", i);
+                        eval_tree = cons(eval(car(prime_args), frame), eval_tree);
+                        prime_args = cdr(prime_args);
+                        i = i + 1;
+                    }
+                    eval_tree = reverse(eval_tree);
+                    Value *results = elseNode->pf(eval_tree);
+                    return results;
                 }
             }
             break;
         }
         default: {
+            printf("LINE 196: ");
             evaulationError();
         }
     }
@@ -210,10 +204,64 @@ Value *eval(Value *tree, Frame *frame) {
     return useless;
 }
 
+Value *primeSum(Value *eval_tree){
+    double currSum = 0;
+    while(!isNull(eval_tree)){
+        Value *eval_tree_car = eval_tree->c.car;
+        if(eval_tree_car->type == INT_TYPE){
+            currSum = currSum + eval_tree_car->i;
+        } else if(eval_tree_car->type == DOUBLE_TYPE){
+            currSum = currSum + eval_tree_car->d;
+        } else {
+            printf("error caused by eval_tree: %s", eval_tree->s);
+            printf("LINE 212: ");
+            evaulationError();
+            Value *useless;
+            return useless;
+        }
+        eval_tree = cdr(eval_tree);
+    }
+    Value *primeSum_node = talloc(sizeof(Value));
+    primeSum_node->type = DOUBLE_TYPE;
+    primeSum_node->d = currSum;
+    return primeSum_node;
+}
+
+Value *primeNull(Value *eval_tree){
+    printf("we in null");
+    char *tUf;
+    if(isNull(car(eval_tree))){
+        tUf = "#t";
+    } else {
+        tUf = "#f";
+    }
+    Value *primeNull_node = talloc(sizeof(Value));
+    primeNull_node->type = BOOL_TYPE;
+    primeNull_node->s = tUf;
+    return primeNull_node;
+}
+
+void oppPrimBind(char *opp, Value *(*function)(Value *), Frame *frame){
+    Value *opp_bind = makeNull();
+    Value *variable = talloc(sizeof(Value));
+    variable->type = SYMBOL_TYPE;
+    variable->s = opp;
+    opp_bind = cons(variable, opp_bind);
+    Value *opperation = talloc(sizeof(Value));
+    opperation->type = PRIMITIVE_TYPE;
+    opperation->pf = function;
+    opp_bind = cons(opperation, opp_bind);
+    opp_bind = reverse(opp_bind);
+    frame->bindings = cons(opp_bind, frame->bindings);
+}
+
 void interpret(Value *tree){
     Frame *frame = talloc(sizeof(Frame));
     frame->parent = NULL;
     frame->bindings = makeNull();
+    //initialize some primitives
+    oppPrimBind("+", primeSum, frame);
+    oppPrimBind("null?", primeNull, frame);
     Value *curNode;
     while(!isNull(tree)){
         curNode = eval(car(tree), frame);
