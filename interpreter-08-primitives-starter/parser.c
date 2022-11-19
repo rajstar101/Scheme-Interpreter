@@ -49,21 +49,28 @@ Value *parse(Value *tokens){
 }
 
 void printTree(Value *tree){
-    while(!isNull(tree)){
-        if(car(tree)->type == CONS_TYPE){
-            printf("( ");
-            printTree(car(tree));
-            printf(") ");
-        }else if(car(tree)->type == INT_TYPE){
-            printf("%i ", car(tree)->i);
-        }else if(car(tree)->type == DOUBLE_TYPE){
-            printf("%f ", car(tree)->d);
-        } else if(car(tree)->type == NULL_TYPE){
-            printf(" ");
-        } else {
-            printf("%s ", car(tree)->s);
-        }
-        tree = cdr(tree);
+    if(tree->type == INT_TYPE){
+        printf("%i ", tree->i);
+    }else if(tree->type == DOUBLE_TYPE){
+        printf("%f ", tree->d);
+    } else if(tree->type == NULL_TYPE){
+        printf(" ");
+    } else if(tree->type == CONS_TYPE){
+        printf("( ");
+            while(tree->type != NULL_TYPE){
+                printTree(car(tree));
+                if (cdr(tree)->type!= NULL_TYPE && cdr(tree)->type!=CONS_TYPE){
+                    printf(". ");
+                    printTree(cdr(tree));
+                    break;
+                }else{
+                    printf(" ");
+                }
+                tree = cdr(tree);
+            }
+        printf(") ");
+    }else {
+        printf("%s ", tree->s);
     }
-    return;
+
 }

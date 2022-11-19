@@ -7,7 +7,6 @@
 // Create a new NULL_TYPE value node.
 Value *makeNull();
 
-Value *makeBooty();
 // Create a new CONS_TYPE value node.
 Value *cons(Value *newCar, Value *newCdr);
 

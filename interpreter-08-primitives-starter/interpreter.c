@@ -16,7 +16,7 @@ Frame *newFrame(Value *bindings, Frame *parent){
     return newFrame;
 }
 
-Value *lookUpSymbol(Value *tree, Frame *frame){ //find bindings
+Value *lookUpSymbol(Value *tree, Frame *frame){
     Frame *currFrame = frame;
     Value *currBindings;
     char *currSymbo = tree->s;
@@ -54,6 +54,7 @@ Value *eval(Value *tree, Frame *frame) {
             break;
         }
         case SYMBOL_TYPE: {
+            Value *look_up_result = lookUpSymbol(tree, frame);
             return lookUpSymbol(tree, frame);
             break;
         }
@@ -67,7 +68,6 @@ Value *eval(Value *tree, Frame *frame) {
             Value *args = cdr(tree);
 
         // Sanity and error checking on first...
-
             if (!strcmp(first->s,"if")) { //if it is a if statement
                 if(!isNull(args)){
                     if(!isNull(cdr(args))){
@@ -126,9 +126,7 @@ Value *eval(Value *tree, Frame *frame) {
                 return letReturn;
             }
             else if (!strcmp(first->s, "quote")){
-                Value *bootyDetector = makeBooty();
-                Value *quoteNode = cons(bootyDetector, args);
-                return quoteNode;
+               return args->c.car;
             }
             else if (!strcmp(first->s, "define")){
                 Value *oldBindings = frame->bindings;
@@ -181,12 +179,9 @@ Value *eval(Value *tree, Frame *frame) {
                 if(elseNode->type == PRIMITIVE_TYPE){
                     Value *eval_tree = makeNull();
                     Value *prime_args = args;
-                    int i = 0;
                     while(!isNull(prime_args)){
-                        printf("%i\n", i);
                         eval_tree = cons(eval(car(prime_args), frame), eval_tree);
                         prime_args = cdr(prime_args);
-                        i = i + 1;
                     }
                     eval_tree = reverse(eval_tree);
                     Value *results = elseNode->pf(eval_tree);
@@ -205,15 +200,32 @@ Value *eval(Value *tree, Frame *frame) {
 }
 
 Value *primeSum(Value *eval_tree){
-    double currSum = 0;
+    int currSum = 0;
     while(!isNull(eval_tree)){
         Value *eval_tree_car = eval_tree->c.car;
         if(eval_tree_car->type == INT_TYPE){
             currSum = currSum + eval_tree_car->i;
         } else if(eval_tree_car->type == DOUBLE_TYPE){
-            currSum = currSum + eval_tree_car->d;
+            double doub_currSum = 0 + currSum;
+            while(!isNull(eval_tree)){
+                Value *doub_eval_tree_car = eval_tree->c.car;
+                if(doub_eval_tree_car->type == INT_TYPE){
+                    doub_currSum = doub_currSum + doub_eval_tree_car->i;
+                } else if (doub_eval_tree_car->type == DOUBLE_TYPE){
+                    doub_currSum = doub_currSum + doub_eval_tree_car->d;
+                } else {
+                    printf("LINE 217: ");
+                    evaulationError();
+                    Value *useless;
+                    return useless;
+                }
+                eval_tree = cdr(eval_tree);
+            }
+            Value *doub_primeSum_node = talloc(sizeof(Value));
+            doub_primeSum_node->type = DOUBLE_TYPE;
+            doub_primeSum_node->d = currSum;
+            return doub_primeSum_node;
         } else {
-            printf("error caused by eval_tree: %s", eval_tree->s);
             printf("LINE 212: ");
             evaulationError();
             Value *useless;
@@ -222,18 +234,27 @@ Value *primeSum(Value *eval_tree){
         eval_tree = cdr(eval_tree);
     }
     Value *primeSum_node = talloc(sizeof(Value));
-    primeSum_node->type = DOUBLE_TYPE;
-    primeSum_node->d = currSum;
+    primeSum_node->type = INT_TYPE;
+    primeSum_node->i = currSum;
     return primeSum_node;
 }
 
 Value *primeNull(Value *eval_tree){
-    printf("we in null");
     char *tUf;
     if(isNull(car(eval_tree))){
         tUf = "#t";
     } else {
         tUf = "#f";
+        if(strcmp(eval_tree->s, "(null)")==0){
+            tUf = "#t";
+        }
+        if(car(eval_tree)->type == CONS_TYPE){
+            if(isNull(car(car(eval_tree)))){
+                tUf = "#t";
+            } else {
+                tUf = "#f";
+            }
+        }
     }
     Value *primeNull_node = talloc(sizeof(Value));
     primeNull_node->type = BOOL_TYPE;
@@ -241,7 +262,22 @@ Value *primeNull(Value *eval_tree){
     return primeNull_node;
 }
 
-void oppPrimBind(char *opp, Value *(*function)(Value *), Frame *frame){
+Value *primeCons(Value *eval_tree){
+    Value *node = cons(car(eval_tree), car(cdr(eval_tree)));
+    return node;
+}
+
+Value *primeCar(Value *eval_tree){
+    Value *node = car(car(eval_tree));
+    return node;
+}
+
+Value *primeCdr(Value *eval_tree){
+    Value *node = cdr(car(eval_tree));
+    return node;
+}
+
+void primBind(char *opp, Value *(*function)(Value *), Frame *frame){
     Value *opp_bind = makeNull();
     Value *variable = talloc(sizeof(Value));
     variable->type = SYMBOL_TYPE;
@@ -260,25 +296,17 @@ void interpret(Value *tree){
     frame->parent = NULL;
     frame->bindings = makeNull();
     //initialize some primitives
-    oppPrimBind("+", primeSum, frame);
-    oppPrimBind("null?", primeNull, frame);
+    primBind("+", primeSum, frame);
+    primBind("null?", primeNull, frame);
+    primBind("cons", primeCons, frame);
+    primBind("car", primeCar, frame);
+    primBind("cdr", primeCdr, frame);
     Value *curNode;
+
     while(!isNull(tree)){
         curNode = eval(car(tree), frame);
-        if(isNull(curNode)){
-            ;
-        }
-        else if(curNode -> type == CONS_TYPE && car(curNode)->type == BOOTY_TYPE){
-            ;
-        } else {
-            if(curNode->type == INT_TYPE){
-                printf("%i\n", curNode->i);
-            } else if(curNode->type == DOUBLE_TYPE){
-                printf("%f\n", curNode->d);
-            } else {
-                printf("%s\n", curNode->s);
-            } 
-        }
+        printTree(curNode);
+        printf("\n");
         tree = cdr(tree);
     }
 }

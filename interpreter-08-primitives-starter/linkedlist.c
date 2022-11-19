@@ -25,16 +25,9 @@ bool isNull(Value *value){
     }
 }
 
-
 Value *makeNull(){
     Value *value = talloc(sizeof(Value));
     value->type = NULL_TYPE;
-    return value;
-}
-
-Value *makeBooty(){
-    Value *value = talloc(sizeof(Value));
-    value->type = BOOTY_TYPE;
     return value;
 }
 
