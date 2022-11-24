@@ -1,0 +1,1 @@
+I worked on this for the most part by myself and asked Chisom and other people in the class to explain concepts to me better. I struggled understanding letrec becaues I had no idea what was going on but it took me a second to get it and it was hard to implement and I stll struggled a bit but I learned alot.
